@@ -3,31 +3,41 @@ module.exports = {
 		return { data: 'test' }
 	},
 
-	getJSON: function(size, count) {
+	getJSON: function(size, itemCount, propertyCount) {
 		var json
-		if (count) {
+		if (itemCount) {
 			var obj = {
 				data: []
 			}
 
-			for (var i = 0; i < count; i++) {
-				obj.data[i] = ''
-				for (var j = 0; j < size; j++) {
-					obj.data[i] += 'a'
+			for (var i = 0; i < itemCount; i++) {
+				if (propertyCount) {
+					obj.data[i] = {}
+					for (var j = 0; j < propertyCount; j++) {
+						obj.data[i]['prop' + j] = getData(size)
+					}
+				} else {
+					obj.data[i] = getData(size)
 				}
 			}
 
 			json = JSON.stringify(obj)
 		} else {
 			json = '{'
-			for(var i = 0; i < size - 2; i++) {
-				json += 'a'
-			}
-
+			json += getData(size - 2)
 			json += '}'
 		}
 	
 
 		return json
 	}
+}
+
+function getData(size) {
+	var data = ''
+	for (var j = 0; j < size; j++) {
+		data += 'a'
+	}
+
+	return data
 }
