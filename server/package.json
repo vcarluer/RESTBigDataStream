@@ -1,0 +1,15 @@
+{
+  "name": "restserver",
+  "version": "1.0.0",
+  "description": "A REST server to send data to test",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "vcarluer@gmail.com",
+  "license": "ISC",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  }
+}

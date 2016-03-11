@@ -1,0 +1,4 @@
+= C# HTTP REST Client big data test =
+Test big data retrieval from HTTP REST service in C#
+Use a nodejs server for service
+use of HTTP Client and DynamicRestClient for C# https://www.nuget.org/packages/DynamicRestClient/
