@@ -51,4 +51,10 @@ describe('Big data set creation test', () => {
 		expect(json).to.have.length.above(10*Math.pow(10, 6))
 		console.log(json.length)
 	})
+
+	it('should return a json of more 10 millions characters just with key word getMillions', () => {
+		var json = dataGenerator.getMillions(10)
+		expect(json).to.have.length.above(10*Math.pow(10, 6))
+		console.log(json.length)
+	})
 })

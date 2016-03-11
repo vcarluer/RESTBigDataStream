@@ -30,6 +30,10 @@ module.exports = {
 	
 
 		return json
+	},
+
+	getMillions: function(millions) {
+		return this.getJSON(100, 1000 * millions, 10)
 	}
 }
 
