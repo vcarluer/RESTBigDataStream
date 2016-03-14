@@ -4,6 +4,7 @@ var url = require('url')
 var fs = require('fs')
 var path = require('path')
 var util = require('util')
+var process = require('process')
 
 var server = http.createServer((request, response) => {
 	var reqUrl = url.parse(request.url)
@@ -35,7 +36,21 @@ var server = http.createServer((request, response) => {
                 response.end()   
             } else {
                 var dataPath = '.\\data\\data.json'
-                // datagenerator.writeJSON(dataPath, )
+                console.log('Generating data for big JSON stream')
+                datagenerator.writeMillions(dataPath, size).then(() => {
+                    console.log('Streaming big JSON to HTTP response ')
+                    var stream = fs.createReadStream(dataPath)
+                    stream.pipe(response)
+                    
+                    stream.on('data', () => {
+                        process.stdout.write('#')    
+                    })
+                    
+                    stream.on('end', () => {
+                        response.end()
+                        console.log('Stream of big JSON end')
+                    })
+                })
             }			
 		}
 	}

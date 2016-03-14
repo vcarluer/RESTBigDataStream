@@ -73,8 +73,8 @@ module.exports = {
 		return this.getJSON(100, 1000 * millions, 10)
 	},
     
-	writeMillions: function(millions) {
-		return this.writeJSON(100, 1000 * millions, 10)
+	writeMillions: function(filePath, millions) {
+		return this.writeJSON(filePath, 100, 1000 * millions, 10)
 	},
     
     writeJSON: function(filePath, size, itemCount, propertyCount) {

@@ -87,7 +87,7 @@ describe('Big data set creation test', () => {
 	})
     
     it('should write a json of more 10 millions characters', (done) => {
-        var filePath = '.\\test\\data\\data.json'
+        var filePath = '.\\test\\data\\data10m.json'
 		dataGenerator.writeJSON(filePath, 100, 10000, 10).then(() => {
             fs.stat(filePath, (err, stat) => {
                 expect(stat.size).to.be.above(10*Math.pow(10, 6))
@@ -102,9 +102,10 @@ describe('Big data set creation test', () => {
 	})
     
     it('should write a json of more 10 millions characters with key word millions', (done) => {
-        var filePath = '.\\test\\data\\data.json'
+        var filePath = '.\\test\\data\\datam.json'
 		dataGenerator.writeMillions(filePath, 10).then(() => {
             fs.stat(filePath, (err, stat) => {
+                expect(err).to.be.null
                 expect(stat.size).to.be.above(10*Math.pow(10, 6))
 		        console.log('size: ' + stat.size)
                 done()
@@ -112,6 +113,7 @@ describe('Big data set creation test', () => {
         })
         .catch((reason) => {
             console.log(reason)
+            expect(reason).to.be.null
             done()
         })
 	})
