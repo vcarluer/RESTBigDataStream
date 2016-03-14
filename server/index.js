@@ -8,6 +8,7 @@ var util = require('util')
 var server = http.createServer((request, response) => {
 	var reqUrl = url.parse(request.url)
 	if (reqUrl.pathname.substr(0, 5) === '/data') {
+        response.writeHead(200, {'Content-Type': 'application/octet-stream'})
 		var respath = path.join('.', reqUrl.pathname)
 		console.log(util.format('streaming %s', respath))
 		var stream = fs.createReadStream(respath)
@@ -26,11 +27,16 @@ var server = http.createServer((request, response) => {
 		if (isNaN(size)) {
 			response.writeHead('403', 'Size not a number')
 			response.end()
-		} else {
+		} else {            
 			response.writeHead(200, {'Content-Type': 'application/json'})
-			var json = datagenerator.getMillions(size)
-			response.write(json)
-			response.end()
+            if (size <= 10) {
+                var json = datagenerator.getMillions(size)
+                response.write(json)
+                response.end()   
+            } else {
+                var dataPath = '.\\data\\data.json'
+                // datagenerator.writeJSON(dataPath, )
+            }			
 		}
 	}
 })
