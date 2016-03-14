@@ -74,7 +74,15 @@ module.exports = {
 	},
     
 	writeMillions: function(filePath, millions) {
-		return this.writeJSON(filePath, 100, 1000 * millions, 10)
+        return new Promise((resolve, reject) => {
+            fs.access(filePath, fs.F_OK, (err) => {
+                if (!err) {
+                    resolve()
+                } else {
+                    this.writeJSON(filePath, 100, 1000 * millions, 10).then(() => { resolve() }).catch((reason) => { reject(reason) })
+                }                  
+            })		    
+        })        
 	},
     
     writeJSON: function(filePath, size, itemCount, propertyCount) {

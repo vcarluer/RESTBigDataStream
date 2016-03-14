@@ -35,7 +35,7 @@ var server = http.createServer((request, response) => {
                 response.write(json)
                 response.end()   
             } else {
-                var dataPath = '.\\data\\data.json'
+                var dataPath = '.\\data\\data' + size + '.json'
                 console.log('Generating data for big JSON stream')
                 datagenerator.writeMillions(dataPath, size).then(() => {
                     console.log('Streaming big JSON to HTTP response ')
