@@ -45,7 +45,7 @@ var server = http.createServer((request, response) => {
         
         objStream.on('data', (data) => {
             // console.log('Object received: ' + JSON.stringify(data))
-            process.stdout.write('#')
+           //  process.stdout.write('#')
             parsedObj.data[parsedObj.data.length] = data
         })
         
