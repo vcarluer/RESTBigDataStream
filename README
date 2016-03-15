@@ -1,4 +1,28 @@
-= C# HTTP REST Client big data test =
-Test big data retrieval from HTTP REST service in C#
-Use a nodejs server for service
-use of HTTP Client and DynamicRestClient for C# https://www.nuget.org/packages/DynamicRestClient/
+= C# HTTP REST Client large data test =
+Test with C# from nodejs HTTP REST:
+large JSON data GET + dynamic object deserialization
+large JSON data POST + object serialization
+
+Use a nodejs server for service with JSONStream
+use of HttpClient, JSON.NET and streams
+
+Usage:
+Object structure:
+{
+	data: []
+}
+
+
+* GET SERVER/SIZE 
+example: http://localhost:8072/10
+Get SIZE millions objects in
+
+* GET SERVER/data/FILE
+Get the file
+
+* POST SERVER
+Send an object (size hardcoded in C#)
+
+Keys for this to work are:
+- Send data in HTTP stream in chunks (not buffered)
+- Serialize/Deserialize on the fly
