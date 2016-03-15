@@ -26,6 +26,7 @@ namespace RESTBigDataClient
 			if (mode == 0) t = TestWithDynamicRestClient();
 			if (mode == 1) t = TestWithHttpClientAndStream();
 			if (mode == 2) t = TestSendData();
+			if (mode == 3) t = TestSendDataStream();
 
 			if (t != null)
 			{
@@ -39,7 +40,7 @@ namespace RESTBigDataClient
 
 		}
 
-		private static int mode = 2;
+		private static int mode = 3;
 		private static string url = "http://localhost:8072/15";
 
 		private static async Task TestWithDynamicRestClient()
@@ -63,6 +64,31 @@ namespace RESTBigDataClient
 			{
 				HttpContent content = new StringContent(json);
 				await httpClient.PostAsync(url, content);
+			}
+		}
+
+		private static async Task TestSendDataStream()
+		{
+			// http://www.thomaslevesque.com/2013/11/30/uploading-data-with-httpclient-using-a-push-model/
+			using (HttpClient httpClient = new HttpClient())
+			{
+				var obj = new
+				{
+					data = "toto"
+				};
+
+				var client = new HttpClient();
+				var content = new PushStreamContent((stream, httpContent, transportContext) =>
+				{
+					var serialier = new JsonSerializer();
+					using (var writer = new StreamWriter(stream))
+					{
+						serialier.Serialize(writer, obj);
+					}
+				});
+
+				var response = await client.PostAsync(url, content);
+				response.EnsureSuccessStatusCode();				
 			}
 		}
 
