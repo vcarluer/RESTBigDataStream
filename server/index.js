@@ -5,16 +5,21 @@ var fs = require('fs')
 var path = require('path')
 var util = require('util')
 var process = require('process')
-// var streamParser = require('json-stream-parser')
+var jsonstream = require('JSONStream')
 
 var server = http.createServer((request, response) => {
     var method = request.method.toLocaleLowerCase()
     if (method === 'post') {
         console.log('Starting data reception from POST request')
          var body = ''
-         var parsedObj = {};
-         var receivedStream = fs.createWriteStream('.\\data\\received.json')
-         request.pipe(receivedStream)
+         var parsedObj = {
+             data: []
+         };
+         
+         //var receivedStream = fs.createWriteStream('.\\data\\received.json')         
+         // request.pipe(receivedStream)
+         var objStream = jsonstream.parse('data.*')
+         request.pipe(objStream)
         request.on('data', function (chunk) {
             // process.stdout.write('#')
             if (chunk) {
@@ -34,10 +39,24 @@ var server = http.createServer((request, response) => {
                 console.log('Last object prop9: ' + bodyObject.data[bodyObject.data.length - 1].prop9)*/
             } else {
                 bodyObject = {}
-            }
+            }            
             
-            response.end()
-        })                
+        })
+        
+        objStream.on('data', (data) => {
+            // console.log('Object received: ' + JSON.stringify(data))
+            process.stdout.write('#')
+            parsedObj.data[parsedObj.data.length] = data
+        })
+        
+        objStream.on('end', () => {
+            console.log('JSONStream end with object count of ' + parsedObj.data.length)
+            console.log('First object prop0: ' + parsedObj.data[0].prop0)
+            console.log('Last object prop9: ' + parsedObj.data[parsedObj.data.length - 1].prop9)
+            
+            response.end()            
+        })
+                        
     } else {
         var reqUrl = url.parse(request.url)
         if (reqUrl.pathname.substr(0, 5) === '/data') {

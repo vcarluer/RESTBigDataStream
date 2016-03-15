@@ -77,7 +77,7 @@ namespace RESTBigDataClient
 				Console.WriteLine("default timeout: " + httpClient.Timeout);
 				httpClient.Timeout = new TimeSpan(0, 5, 0);
 				Console.WriteLine("timeout raised to 5mn");
-				dynamic obj = CreateBigObject(5000); // 5000 = 1GB json
+				dynamic obj = CreateBigObject(100); // 5000 = 1GB json
 
 				var client = new HttpClient();
 
