@@ -46,6 +46,92 @@ namespace RESTBigDataClient
 		private static int mode = 4;
 		private static string url = "http://localhost:8072/15";
 
+
+		// THE NEXT 2 FUNCTIONS CAN HANDLE UNLIMITED SIZE OF OBJECT OR JSON
+
+		// THIS READ AND DESERIALIZE THE JSON STREAM ON THE FLY
+		private static async Task TestWithHttpClientAndStream()
+		{
+			// http://www.newtonsoft.com/json/help/html/Performance.htm
+			using (HttpClient httpClient = new HttpClient())
+			{
+				dynamic testData;
+				using (Stream stream = httpClient.GetStreamAsync(url).Result)
+				using (StreamReader streamReader = new StreamReader(stream))
+				using (JsonReader jsonReader = new JsonTextReader(streamReader))
+				{
+					JsonSerializer serializer = new JsonSerializer();
+					testData = serializer.Deserialize(jsonReader);
+				}
+
+				WriteData(testData);
+			}
+		}
+
+		// THIS SERIALIZES MANUALLY THE OBJECT TO JSON AND STREAMS REGULARY TO HTTP
+		private static async Task TestSendDataStreamManual()
+		{
+			// http://www.thomaslevesque.com/2013/11/30/uploading-data-with-httpclient-using-a-push-model/
+			using (HttpClient httpClient = new HttpClient())
+			{
+				Console.WriteLine("default timeout: " + httpClient.Timeout);
+				httpClient.Timeout = new TimeSpan(0, 5, 0);
+				Console.WriteLine("timeout raised to 5mn");
+				dynamic obj = CreateBigObject(5000); // 5000 = 1GB json
+
+				var client = new HttpClient();
+
+				// THIS IS MANDATORY TO STREAM AND NOT BUFFER DATA
+				client.DefaultRequestHeaders.TransferEncodingChunked = true;
+
+				var content = new PushStreamContent((stream, httpContent, transportContext) =>
+				{
+					using (var streamWriter = new StreamWriter(stream))
+					using (var writer = new JsonTextWriter(streamWriter))
+					{
+						writer.WriteStartObject();
+						writer.WritePropertyName("data");
+						writer.WriteStartArray();
+						foreach (dynamic item in obj.data)
+						{
+							writer.WriteStartObject();
+							writer.WritePropertyName("prop0");
+							writer.WriteValue(item.prop0);
+							writer.WritePropertyName("prop1");
+							writer.WriteValue(item.prop1);
+							writer.WritePropertyName("prop2");
+							writer.WriteValue(item.prop2);
+							writer.WritePropertyName("prop3");
+							writer.WriteValue(item.prop3);
+							writer.WritePropertyName("prop4");
+							writer.WriteValue(item.prop4);
+							writer.WritePropertyName("prop5");
+							writer.WriteValue(item.prop5);
+							writer.WritePropertyName("prop6");
+							writer.WriteValue(item.prop6);
+							writer.WritePropertyName("prop7");
+							writer.WriteValue(item.prop7);
+							writer.WritePropertyName("prop8");
+							writer.WriteValue(item.prop8);
+							writer.WritePropertyName("prop9");
+							writer.WriteValue(item.prop9);
+							writer.WriteEndObject();
+
+							// FLUSH TO STREAMS
+							writer.Flush();
+							streamWriter.Flush();
+						}
+
+						writer.WriteEndArray();
+						writer.WriteEndObject();
+					}
+				});
+
+				var response = await client.PostAsync(url, content);
+				response.EnsureSuccessStatusCode();
+			}
+		}
+
 		private static async Task TestWithDynamicRestClient()
 		{
 			using (dynamic localrest = new DynamicRestClient(url))
@@ -86,68 +172,7 @@ namespace RESTBigDataClient
 			{
 				outputStream.Close();
 			}
-		}
-
-		private static async Task TestSendDataStreamManual()
-		{
-			// http://www.thomaslevesque.com/2013/11/30/uploading-data-with-httpclient-using-a-push-model/
-			using (HttpClient httpClient = new HttpClient())
-			{
-				Console.WriteLine("default timeout: " + httpClient.Timeout);
-				httpClient.Timeout = new TimeSpan(0, 5, 0);
-				Console.WriteLine("timeout raised to 5mn");
-				dynamic obj = CreateBigObject(5000);
-
-				var client = new HttpClient();
-				client.DefaultRequestHeaders.TransferEncodingChunked = true;
-				// var content = new JsonContent(obj);
-				// var content = new ObjectContent(typeof(object), obj, new JsonMediaTypeFormatter());
-				// var content = new PushStreamContent(WriteToStream);
-				var content = new PushStreamContent((stream, httpContent, transportContext) =>
-				{
-					using (var streamWriter = new StreamWriter(stream))
-					using (var writer = new JsonTextWriter(streamWriter))
-					{
-						writer.WriteStartObject();
-						writer.WritePropertyName("data");
-						writer.WriteStartArray();
-						foreach (dynamic item in obj.data)
-						{
-							writer.WriteStartObject();
-							writer.WritePropertyName("prop0");
-							writer.WriteValue(item.prop0);
-							writer.WritePropertyName("prop1");
-							writer.WriteValue(item.prop1);
-							writer.WritePropertyName("prop2");
-							writer.WriteValue(item.prop2);
-							writer.WritePropertyName("prop3");
-							writer.WriteValue(item.prop3);
-							writer.WritePropertyName("prop4");
-							writer.WriteValue(item.prop4);
-							writer.WritePropertyName("prop5");
-							writer.WriteValue(item.prop5);
-							writer.WritePropertyName("prop6");
-							writer.WriteValue(item.prop6);
-							writer.WritePropertyName("prop7");
-							writer.WriteValue(item.prop7);
-							writer.WritePropertyName("prop8");
-							writer.WriteValue(item.prop8);
-							writer.WritePropertyName("prop9");
-							writer.WriteValue(item.prop9);
-							writer.WriteEndObject();
-							writer.Flush();
-							streamWriter.Flush();
-						}
-
-						writer.WriteEndArray();
-						writer.WriteEndObject();
-					}
-				});
-
-				var response = await client.PostAsync(url, content);
-				response.EnsureSuccessStatusCode();
-			}
-		}
+		}		
 
 		private static async Task TestSendDataStream()
 		{
@@ -195,25 +220,7 @@ namespace RESTBigDataClient
 			}
 
 			return new { data = list };
-		}
-
-		private static async Task TestWithHttpClientAndStream()
-		{
-			// http://www.newtonsoft.com/json/help/html/Performance.htm
-			using (HttpClient httpClient = new HttpClient())
-			{
-				dynamic testData;
-				using (Stream stream = httpClient.GetStreamAsync(url).Result)
-				using (StreamReader streamReader = new StreamReader(stream))
-				using (JsonReader jsonReader = new JsonTextReader(streamReader))
-				{
-					JsonSerializer serializer = new JsonSerializer();
-					testData = serializer.Deserialize(jsonReader);
-				}
-
-				WriteData(testData);
-			}
-		}
+		}		
 
 		private static void WriteData(dynamic testData)
 		{
