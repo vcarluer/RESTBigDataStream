@@ -25,6 +25,7 @@ namespace RESTBigDataClient
 			Task t = null;
 			if (mode == 0) t = TestWithDynamicRestClient();
 			if (mode == 1) t = TestWithHttpClientAndStream();
+			if (mode == 2) t = TestSendData();
 
 			if (t != null)
 			{
@@ -38,8 +39,8 @@ namespace RESTBigDataClient
 
 		}
 
-		private static int mode = 1;
-		private static string url = "http://localhost:8072/300";
+		private static int mode = 2;
+		private static string url = "http://localhost:8072/15";
 
 		private static async Task TestWithDynamicRestClient()
 		{
@@ -47,6 +48,21 @@ namespace RESTBigDataClient
 			{
 				dynamic testData = await localrest.get();
 				WriteData(testData);
+			}
+		}
+
+		private static async Task TestSendData()
+		{
+			var obj = new
+			{
+				data = "toto"
+			};
+
+			var json = JsonConvert.SerializeObject(obj);
+			using (HttpClient httpClient = new HttpClient())
+			{
+				HttpContent content = new StringContent(json);
+				await httpClient.PostAsync(url, content);
 			}
 		}
 
@@ -72,6 +88,15 @@ namespace RESTBigDataClient
 		{
 			Console.WriteLine("Count: " + testData.data.Count);
 			Console.WriteLine("Prop0 of first object: " + testData.data[0].prop0);
+			if (testData.data[0].prop10)
+			{
+				Console.WriteLine("Prop0 of first object: " + testData.data[0].prop10);
+			}
+			else
+			{
+				Console.WriteLine("No Prop10");
+			}
+			
 			Console.WriteLine("Prop9 of last object: " + testData.data[testData.data.Count - 1].prop9);
 		}
 	}
