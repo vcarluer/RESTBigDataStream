@@ -5,20 +5,33 @@ var fs = require('fs')
 var path = require('path')
 var util = require('util')
 var process = require('process')
+// var streamParser = require('json-stream-parser')
 
 var server = http.createServer((request, response) => {
     var method = request.method.toLocaleLowerCase()
     if (method === 'post') {
+        console.log('Starting data reception from POST request')
          var body = ''
+         var parsedObj = {};
+         var receivedStream = fs.createWriteStream('.\\data\\received.json')
+         request.pipe(receivedStream)
         request.on('data', function (chunk) {
-            body += chunk
+            // process.stdout.write('#')
+            if (chunk) {
+                // body += chunk
+                // console.log('chunk: ' + chunk)
+                // var data = streamParser.parse(chunk)    
+            }
         })
         request.on('end', function () {
+            console.log('Received body with length: ' + body.length)
             var bodyObject
-            if (body) {
-                console.log('Received body:')
-                console.log(body)
-                bodyObject = JSON.parse(body)
+            if (body) {                
+                // console.log(body)
+                /*bodyObject = JSON.parse(body)
+                console.log('Object count: ' + bodyObject.data.length)
+                console.log('First object prop0: ' + bodyObject.data[0].prop0)
+                console.log('Last object prop9: ' + bodyObject.data[bodyObject.data.length - 1].prop9)*/
             } else {
                 bodyObject = {}
             }
@@ -74,6 +87,10 @@ var server = http.createServer((request, response) => {
             }
         }
     }
+})
+
+server.on('connection', (socket) => {
+    socket.setTimeout(1000 * 60 * 300)
 })
 
 server.listen(8072)
