@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -30,6 +31,7 @@ namespace RESTBigDataClient
 			if (mode == 2) t = TestSendData();
 			if (mode == 3) t = TestSendDataStream();
 			if (mode == 4) t = TestSendDataStreamManual();
+			if (mode == 5) t = TestWithHttpClientAndStreamManual();
 
 			if (t != null)
 			{
@@ -43,29 +45,103 @@ namespace RESTBigDataClient
 
 		}
 
-		private static int mode = 4;
-		private static string url = "http://localhost:8072/15";
+		private static int mode = 5;
+		private static string url = "http://localhost:8072/data/received.json";
 
 
 		// THE NEXT 2 FUNCTIONS CAN HANDLE UNLIMITED SIZE OF OBJECT OR JSON
 
 		// THIS READ AND DESERIALIZE THE JSON STREAM ON THE FLY
-		private static async Task TestWithHttpClientAndStream()
+		private static async Task TestWithHttpClientAndStreamManual()
 		{
 			// http://www.newtonsoft.com/json/help/html/Performance.htm
 			using (HttpClient httpClient = new HttpClient())
 			{
-				dynamic testData;
 				using (Stream stream = httpClient.GetStreamAsync(url).Result)
 				using (StreamReader streamReader = new StreamReader(stream))
 				using (JsonReader jsonReader = new JsonTextReader(streamReader))
 				{
-					JsonSerializer serializer = new JsonSerializer();
-					testData = serializer.Deserialize(jsonReader);
-				}
+					dynamic received = null;
+					Stack<object> currentObjects = new Stack<object>();
+					string lastPropertyName = "";
+					List<object> currentList = null;
+					dynamic currentObject = null;
 
-				WriteData(testData);
+					while (jsonReader.Read())
+					{
+						/*Console.WriteLine(String.Format("type:value {0}:{1}", 
+							jsonReader.TokenType.ToString(),
+							jsonReader.Value?.ToString()));												
+						*/						
+						if (currentObjects.Count > 0)
+						{
+							currentObject = currentObjects.Peek();
+						}
+
+						if (jsonReader.TokenType == JsonToken.StartObject)
+						{
+							currentObject = new ExpandoObject();
+							currentObjects.Push(currentObject);
+
+							if (received == null)
+							{
+								received = currentObject;
+							}
+
+							if (currentList != null)
+							{
+								currentList.Add(currentObject);
+							}
+							if (currentObject != null && !String.IsNullOrEmpty(lastPropertyName))
+							{
+								((IDictionary<String, Object>)currentObject).Add(lastPropertyName, currentObject);
+							}
+
+							lastPropertyName = "";
+						}
+
+						if (jsonReader.TokenType == JsonToken.EndObject)
+						{
+							currentObjects.Pop();
+						}
+
+						if (jsonReader.TokenType == JsonToken.PropertyName)
+						{
+							lastPropertyName = jsonReader.Value.ToString();
+						}
+
+						if((currentObject != null) && 
+							(
+							jsonReader.TokenType == JsonToken.String ||
+							jsonReader.TokenType == JsonToken.Boolean ||
+							jsonReader.TokenType == JsonToken.Bytes ||
+							jsonReader.TokenType == JsonToken.Date ||
+							jsonReader.TokenType == JsonToken.Float ||
+							jsonReader.TokenType == JsonToken.Integer
+							))
+						{
+							((IDictionary<String, Object>)currentObject).Add(lastPropertyName, jsonReader.Value.ToString());
+							lastPropertyName = "";
+						}
+
+						if (currentObject != null && jsonReader.TokenType == JsonToken.StartArray)
+						{
+							currentList = new List<object>();
+							((IDictionary<String, Object>)currentObject).Add(lastPropertyName, currentList);
+							lastPropertyName = "";
+						}
+
+						if (jsonReader.TokenType == JsonToken.EndArray)
+						{
+							currentList = null;
+						}
+					}
+
+					WriteData(received);
+				}
 			}
+
+			Console.ReadKey();
 		}
 
 		// THIS SERIALIZES MANUALLY THE OBJECT TO JSON AND STREAMS REGULARY TO HTTP
@@ -129,6 +205,25 @@ namespace RESTBigDataClient
 
 				var response = await client.PostAsync(url, content);
 				response.EnsureSuccessStatusCode();
+			}
+		}
+
+		// THIS READ AND DESERIALIZE THE JSON STREAM ON THE FLY (OR NOT, LIMIT REACHED)
+		private static async Task TestWithHttpClientAndStream()
+		{
+			// http://www.newtonsoft.com/json/help/html/Performance.htm
+			using (HttpClient httpClient = new HttpClient())
+			{
+				dynamic testData;
+				using (Stream stream = httpClient.GetStreamAsync(url).Result)
+				using (StreamReader streamReader = new StreamReader(stream))
+				using (JsonReader jsonReader = new JsonTextReader(streamReader))
+				{
+					JsonSerializer serializer = new JsonSerializer();
+					testData = serializer.Deserialize(jsonReader);
+				}
+
+				WriteData(testData);
 			}
 		}
 
@@ -226,14 +321,6 @@ namespace RESTBigDataClient
 		{
 			Console.WriteLine("Count: " + testData.data.Count);
 			Console.WriteLine("Prop0 of first object: " + testData.data[0].prop0);
-			if (testData.data[0].prop10)
-			{
-				Console.WriteLine("Prop0 of first object: " + testData.data[0].prop10);
-			}
-			else
-			{
-				Console.WriteLine("No Prop10");
-			}
 
 			Console.WriteLine("Prop9 of last object: " + testData.data[testData.data.Count - 1].prop9);
 		}
