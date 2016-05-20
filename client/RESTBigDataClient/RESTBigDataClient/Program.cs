@@ -45,7 +45,7 @@ namespace RESTBigDataClient
 
 		}
 
-		private static int mode = 5;
+		private static int mode = 4;
 		private static string url = "http://localhost:8072/data/received.json";
 
 
@@ -80,7 +80,7 @@ namespace RESTBigDataClient
 
 						if (jsonReader.TokenType == JsonToken.StartObject)
 						{
-							currentObject = new ExpandoObject();
+							currentObject = new ExpandoObject();							
 							currentObjects.Push(currentObject);
 
 							if (received == null)
@@ -153,7 +153,7 @@ namespace RESTBigDataClient
 				Console.WriteLine("default timeout: " + httpClient.Timeout);
 				httpClient.Timeout = new TimeSpan(0, 5, 0);
 				Console.WriteLine("timeout raised to 5mn");
-				dynamic obj = CreateBigObject(5000); // 5000 = 1GB json
+				dynamic obj = CreateBigObject(100); // 5000 = 1GB json
 
 				var client = new HttpClient();
 
